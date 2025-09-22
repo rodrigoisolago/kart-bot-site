@@ -1,38 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <title>Bot Kart Portugal</title>
+  <meta charset="utf-8"/>
+  <title>Bot Kart – K2 teste</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    #chatbox { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-    input[type=text] { width: 80%; padding: 8px; }
-    button { padding: 8px; }
+    body{font-family:Arial;padding:20px}
+    #chat{height:300px;border:1px solid #ccc;padding:10px;overflow-y:scroll}
+    input{width:75%;padding:6px}
+    button{padding:6px}
   </style>
 </head>
 <body>
 
-  <h1>Bot Kart Portugal - Dúvidas de Regulamento</h1>
-  <p>Escreve uma situação de corrida ou dúvida. (Por agora, o bot só responde com frases fixas.)</p>
+<h2>Bot Kart Portugal – teste K2 (grátis)</h2>
+<div id="chat"></div>
+<input id="q" placeholder="Pergunta aqui…"/>
+<button onclick="ask()">Enviar</button>
 
-  <div id="chatbox"></div>
-  <input type="text" id="pergunta" placeholder="Ex: O que acontece se ultrapassar pela linha amarela?" />
-  <button onclick="enviar()">Enviar</button>
+<script>
+async function ask(){
+  const q = document.getElementById("q").value;
+  document.getElementById("chat").innerHTML += `<b>Tu:</b> ${q}<br>`;
 
-  <script>
-    function enviar() {
-      const pergunta = document.getElementById("pergunta").value;
-      const chatbox = document.getElementById("chatbox");
-      chatbox.innerHTML += "<strong>Tu:</strong> " + pergunta + "<br>";
+  const reply = await fetch("https://openrouter.ai/api/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      "Authorization":"Bearer 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",
+      "Content-Type":"application/json",
+      "HTTP-Referer":window.location.href,
+      "X-Title":"BotKart"
+    },
+    body:JSON.stringify({
+      model:"moonshotai/kimi-k2:free",
+      messages:[{role:"user",content:q}]
+    })
+  }).then(r=>r.json());
 
-      // Resposta fixa por agora
-      const resposta = "Ainda estou a aprender. Em breve vou ler os PDFs do regulamento.";
-      chatbox.innerHTML += "<strong>Bot:</strong> " + resposta + "<br>";
-
-      document.getElementById("pergunta").value = "";
-      chatbox.scrollTop = chatbox.scrollHeight;
-    }
-  </script>
+  const ans = reply.choices[0].message.content;
+  document.getElementById("chat").innerHTML += `<b>K2:</b> ${ans}<br>`;
+  document.getElementById("q").value="";
+}
+</script>
 
 </body>
 </html>
