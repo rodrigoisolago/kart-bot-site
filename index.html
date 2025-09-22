@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="utf-8"/>
-  <title>Bot Kart – Gemini com PDFs (grátis)</title>
+  <title>Bot Kart – Gemini c/ verificação (grátis)</title>
   <style>
     body{font-family:Arial;padding:20px;max-width:800px;margin:auto}
     #chat{height:350px;border:1px solid #ccc;padding:10px;overflow-y:scroll;background:#f9f9f9}
@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<h2>Bot Kart Portugal – Gemini 1.5 Flash + Regulamentos (grátis)</h2>
+<h2>Bot Kart Portugal – Gemini 1.5 Flash + Verificação (grátis)</h2>
 <div id="chat"></div>
 <input id="q" placeholder="Ex: Qual a penalidade por falsa partida?"/>
 <button onclick="ask()">Enviar</button>
@@ -40,33 +40,52 @@ async function ask(){
   if(!q) return;
   const box = document.getElementById("chat");
   box.innerHTML += `<b>Tu:</b> ${q}<br>`;
-  box.innerHTML += `<i>A consultar regulamentos…</i><br>`;
+  box.innerHTML += `<i>A verificar regulamentos…</i><br>`;
   document.getElementById("q").value="";
   box.scrollTop = box.scrollHeight;
 
-  // 1) Anexa todos os PDFs
-  const parts = [];
-  uris.forEach(u=>parts.push({fileData:{fileUri:u,mimeType:"application/pdf"}}));
-
-  // 2) Prompt obrigatório
-  parts.push({text:
-    "Com base apenas nos regulamentos anexados, responde em português e indica sempre:\n" +
-    "1. Artigo e página exatos;\n" +
-    "2. Valor da taxa de reclamação em euros;\n" +
-    "3. Prazo para reclamar.\n\n" +
-    "Pergunta: " + q
+  // 1.º PASSO – pedir TODOS os trechos que falam no assunto
+  const parts1 = [];
+  uris.forEach(u=>parts1.push({fileData:{fileUri:u,mimeType:"application/pdf"}}));
+  parts1.push({text:
+    "Lista TODOS os trechos dos regulamentos anexados que contenham expressões como:\n"+
+    "\"falsa partida\", \"penalidade\", \"5 segundos\", \"anulação\", \"Art. 29\".\n"+
+    "Para cada trecho indica: ficheiro, artigo, página e texto original (máx. 3 trechos)."
   });
 
   try{
-    const res = await fetch(
+    const res1 = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
       {method:"POST", headers:{"Content-Type":"application/json"},
-       body:JSON.stringify({contents:[{parts}]})}
+       body:JSON.stringify({contents:[{parts:parts1}]})}
     );
-    if(!res.ok) throw new Error("Erro HTTP "+res.status);
-    const data = await res.json();
-    const ans = data.candidates[0].content.parts[0].text;
-    box.lastElementChild.remove(); // retira "A consultar…"
+    if(!res1.ok) throw new Error("Erro HTTP "+res1.status);
+    const data1 = await res1.json();
+    const trechos = data1.candidates[0].content.parts[0].text;
+
+    // 2.º PASSO – comparar e devolver só o correcto
+    const parts2 = [];
+    uris.forEach(u=>parts2.push({fileData:{fileUri:u,mimeType:"application/pdf"}}));
+    parts2.push({text:
+      "Com base apenas nos trechos abaixo, responde à pergunta:\n"+
+      "Pergunta: " + q + "\n\n" +
+      "Trechos encontrados:\n" + trechos + "\n\n" +
+      "Regras:\n"+
+      "- Se houver contradição, escolhe o trecho mais específico para o contexto (Karting).\n"+
+      "- Indica sempre: artigo, página, penalidade, valor da taxa de reclamação (€) e prazo.\n"+
+      "- Se não encontrares, responde \"Não consta nos regulamentos fornecidos\"."
+    });
+
+    const res2 = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+      {method:"POST", headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({contents:[{parts:parts2}]})}
+    );
+    if(!res2.ok) throw new Error("Erro HTTP "+res2.status);
+    const data2 = await res2.json();
+    const ans = data2.candidates[0].content.parts[0].text;
+
+    box.lastElementChild.remove(); // tira "A verificar…"
     box.innerHTML += `<b>Bot:</b> ${ans}<br>`;
     box.scrollTop = box.scrollHeight;
   }catch(e){
