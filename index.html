@@ -44,15 +44,18 @@ async function ask(){
   document.getElementById("q").value="";
   box.scrollTop = box.scrollHeight;
 
-  // constrói partes: um objeto fileData por URI
-  const parts = [
-    {text:"Com base apenas nos regulamentos anexados, responde em português e indica sempre:\n"+
-          "1. Artigo e página exatos;\n"+
-          "2. Valor da taxa de reclamação em euros;\n"+
-          "3. Prazo para reclamar.\n\n"+
-          "Pergunta: "+q}
-  ];
-  uris.forEach(u=>parts.unshift({fileData:{fileUri:u,mimeType:"application/pdf"}}));
+  // 1) Anexa todos os PDFs
+  const parts = [];
+  uris.forEach(u=>parts.push({fileData:{fileUri:u,mimeType:"application/pdf"}}));
+
+  // 2) Prompt obrigatório
+  parts.push({text:
+    "Com base apenas nos regulamentos anexados, responde em português e indica sempre:\n" +
+    "1. Artigo e página exatos;\n" +
+    "2. Valor da taxa de reclamação em euros;\n" +
+    "3. Prazo para reclamar.\n\n" +
+    "Pergunta: " + q
+  });
 
   try{
     const res = await fetch(
@@ -60,9 +63,10 @@ async function ask(){
       {method:"POST", headers:{"Content-Type":"application/json"},
        body:JSON.stringify({contents:[{parts}]})}
     );
+    if(!res.ok) throw new Error("Erro HTTP "+res.status);
     const data = await res.json();
     const ans = data.candidates[0].content.parts[0].text;
-    box.lastElementChild.remove(); // tira "A consultar…"
+    box.lastElementChild.remove(); // retira "A consultar…"
     box.innerHTML += `<b>Bot:</b> ${ans}<br>`;
     box.scrollTop = box.scrollHeight;
   }catch(e){
