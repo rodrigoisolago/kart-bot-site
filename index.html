@@ -2,46 +2,68 @@
 <html lang="pt">
 <head>
   <meta charset="utf-8"/>
-  <title>Bot Kart – Gemini 1.5 Flash (grátis)</title>
+  <title>Bot Kart – Gemini com PDFs (grátis)</title>
   <style>
-    body{font-family:Arial;padding:20px;max-width:700px;margin:auto}
-    #chat{height:300px;border:1px solid #ccc;padding:10px;overflow-y:scroll;background:#f9f9f9}
+    body{font-family:Arial;padding:20px;max-width:800px;margin:auto}
+    #chat{height:350px;border:1px solid #ccc;padding:10px;overflow-y:scroll;background:#f9f9f9}
     input{width:75%;padding:6px}
     button{padding:6px}
   </style>
 </head>
 <body>
 
-<h2>Bot Kart Portugal – Gemini 1.5 Flash (grátis)</h2>
+<h2>Bot Kart Portugal – Gemini 1.5 Flash + Regulamentos (grátis)</h2>
 <div id="chat"></div>
-<input id="q" placeholder="Ex: O que acontece se ultrapassar pela linha amarela?"/>
+<input id="q" placeholder="Ex: Qual a penalidade por falsa partida?"/>
 <button onclick="ask()">Enviar</button>
 
 <script>
+const key = "AIzaSyB02zt1TuvDGdvYotIrmfHYr_veKvjVuNg";
+const uris = [
+  "https://generativelanguage.googleapis.com/v1beta/files/ioj98hanu3wu",
+  "https://generativelanguage.googleapis.com/v1beta/files/6u6pa0lmzr55",
+  "https://generativelanguage.googleapis.com/v1beta/files/mw1pmt37zevz",
+  "https://generativelanguage.googleapis.com/v1beta/files/qyfc2llkjcq2",
+  "https://generativelanguage.googleapis.com/v1beta/files/4k4273d0ptlo",
+  "https://generativelanguage.googleapis.com/v1beta/files/olirudage17g",
+  "https://generativelanguage.googleapis.com/v1beta/files/az2tqrpkamc0",
+  "https://generativelanguage.googleapis.com/v1beta/files/vddfkgb2dd21",
+  "https://generativelanguage.googleapis.com/v1beta/files/uunu89fenvo8",
+  "https://generativelanguage.googleapis.com/v1beta/files/d930r6q8xd5q",
+  "https://generativelanguage.googleapis.com/v1beta/files/yc1xppkb760s",
+  "https://generativelanguage.googleapis.com/v1beta/files/kb35tmgq0h9u",
+  "https://generativelanguage.googleapis.com/v1beta/files/rduxqhpcb4xh"
+];
+
 async function ask(){
   const q = document.getElementById("q").value.trim();
   if(!q) return;
   const box = document.getElementById("chat");
   box.innerHTML += `<b>Tu:</b> ${q}<br>`;
-  box.innerHTML += `<i>A pensar…</i><br>`;
+  box.innerHTML += `<i>A consultar regulamentos…</i><br>`;
   document.getElementById("q").value="";
   box.scrollTop = box.scrollHeight;
 
+  // constrói partes: um objeto fileData por URI
+  const parts = [
+    {text:"Com base apenas nos regulamentos anexados, responde em português e indica sempre:\n"+
+          "1. Artigo e página exatos;\n"+
+          "2. Valor da taxa de reclamação em euros;\n"+
+          "3. Prazo para reclamar.\n\n"+
+          "Pergunta: "+q}
+  ];
+  uris.forEach(u=>parts.unshift({fileData:{fileUri:u,mimeType:"application/pdf"}}));
+
   try{
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyB02zt1TuvDGdvYotIrmfHYr_veKvjVuNg",
-      {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          contents:[{parts:[{text:q}]}]
-        })
-      }
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+      {method:"POST", headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({contents:[{parts}]})}
     );
     const data = await res.json();
     const ans = data.candidates[0].content.parts[0].text;
-    box.lastElementChild.remove(); // tira “A pensar…”
-    box.innerHTML += `<b>Gemini:</b> ${ans}<br>`;
+    box.lastElementChild.remove(); // tira "A consultar…"
+    box.innerHTML += `<b>Bot:</b> ${ans}<br>`;
     box.scrollTop = box.scrollHeight;
   }catch(e){
     box.lastElementChild.remove();
