@@ -4,8 +4,8 @@
   <meta charset="utf-8"/>
   <title>Bot Kart – K2 teste</title>
   <style>
-    body{font-family:Arial;padding:20px}
-    #chat{height:300px;border:1px solid #ccc;padding:10px;overflow-y:scroll}
+    body{font-family:Arial;padding:20px;max-width:700px;margin:auto}
+    #chat{height:300px;border:1px solid #ccc;padding:10px;overflow-y:scroll;background:#f9f9f9}
     input{width:75%;padding:6px}
     button{padding:6px}
   </style>
@@ -19,26 +19,40 @@
 
 <script>
 async function ask(){
-  const q = document.getElementById("q").value;
+  const q = document.getElementById("q").value.trim();
+  if(!q) return;
   document.getElementById("chat").innerHTML += `<b>Tu:</b> ${q}<br>`;
 
-  const reply = await fetch("https://openrouter.ai/api/v1/chat/completions",{
-    method:"POST",
-    headers:{
-      "Authorization":"Bearer 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",
-      "Content-Type":"application/json",
-      "HTTP-Referer":window.location.href,
-      "X-Title":"BotKart"
-    },
-    body:JSON.stringify({
-      model:"moonshotai/kimi-k2:free",
-      messages:[{role:"user",content:q}]
-    })
-  }).then(r=>r.json());
-
-  const ans = reply.choices[0].message.content;
-  document.getElementById("chat").innerHTML += `<b>K2:</b> ${ans}<br>`;
+  document.getElementById("chat").innerHTML += `<i>A pensar…</i><br>`;
   document.getElementById("q").value="";
+
+  try{
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Authorization":"Bearer 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",   // ❗️substitui aqui
+        "Content-Type":"application/json",
+        "HTTP-Referer":window.location.href,
+        "X-Title":"BotKart"
+      },
+      body:JSON.stringify({
+        model:"moonshotai/kimi-k2:free",
+        messages:[{role:"user",content:q}]
+      })
+    });
+
+    const data = await res.json();
+    const ans  = data.choices[0].message.content;
+
+    // remove "A pensar…"
+    const box = document.getElementById("chat");
+    box.lastElementChild.remove();
+    box.innerHTML += `<b>K2:</b> ${ans}<br>`;
+    box.scrollTop = box.scrollHeight;
+  }catch(e){
+    document.getElementById("chat").lastElementChild.remove();
+    document.getElementById("chat").innerHTML += `<b>Erro:</b> ${e.message}<br>`;
+  }
 }
 </script>
 
