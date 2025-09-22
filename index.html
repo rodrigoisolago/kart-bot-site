@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="utf-8"/>
-  <title>Bot Kart – K2 teste</title>
+  <title>Bot Kart – Gemini 1.5 Flash (grátis)</title>
   <style>
     body{font-family:Arial;padding:20px;max-width:700px;margin:auto}
     #chat{height:300px;border:1px solid #ccc;padding:10px;overflow-y:scroll;background:#f9f9f9}
@@ -12,46 +12,40 @@
 </head>
 <body>
 
-<h2>Bot Kart Portugal – teste K2 (grátis)</h2>
+<h2>Bot Kart Portugal – Gemini 1.5 Flash (grátis)</h2>
 <div id="chat"></div>
-<input id="q" placeholder="Pergunta aqui…"/>
+<input id="q" placeholder="Ex: O que acontece se ultrapassar pela linha amarela?"/>
 <button onclick="ask()">Enviar</button>
 
 <script>
 async function ask(){
   const q = document.getElementById("q").value.trim();
   if(!q) return;
-  document.getElementById("chat").innerHTML += `<b>Tu:</b> ${q}<br>`;
-
-  document.getElementById("chat").innerHTML += `<i>A pensar…</i><br>`;
+  const box = document.getElementById("chat");
+  box.innerHTML += `<b>Tu:</b> ${q}<br>`;
+  box.innerHTML += `<i>A pensar…</i><br>`;
   document.getElementById("q").value="";
+  box.scrollTop = box.scrollHeight;
 
   try{
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions",{
-      method:"POST",
-      headers:{
-        "Authorization":"Bearer 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",   // ❗️substitui aqui
-        "Content-Type":"application/json",
-        "HTTP-Referer":window.location.href,
-        "X-Title":"BotKart"
-      },
-      body:JSON.stringify({
-        model:"moonshotai/kimi-k2:free",
-        messages:[{role:"user",content:q}]
-      })
-    });
-
+    const res = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyB02zt1TuvDGdvYotIrmfHYr_veKvjVuNg",
+      {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          contents:[{parts:[{text:q}]}]
+        })
+      }
+    );
     const data = await res.json();
-    const ans  = data.choices[0].message.content;
-
-    // remove "A pensar…"
-    const box = document.getElementById("chat");
-    box.lastElementChild.remove();
-    box.innerHTML += `<b>K2:</b> ${ans}<br>`;
+    const ans = data.candidates[0].content.parts[0].text;
+    box.lastElementChild.remove(); // tira “A pensar…”
+    box.innerHTML += `<b>Gemini:</b> ${ans}<br>`;
     box.scrollTop = box.scrollHeight;
   }catch(e){
-    document.getElementById("chat").lastElementChild.remove();
-    document.getElementById("chat").innerHTML += `<b>Erro:</b> ${e.message}<br>`;
+    box.lastElementChild.remove();
+    box.innerHTML += `<b>Erro:</b> ${e.message}<br>`;
   }
 }
 </script>
