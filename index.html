@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bot Kart Portugal</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #chatbox { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+    input[type=text] { width: 80%; padding: 8px; }
+    button { padding: 8px; }
+  </style>
+</head>
+<body>
+
+  <h1>Bot Kart Portugal - Dúvidas de Regulamento</h1>
+  <p>Escreve uma situação de corrida ou dúvida. (Por agora, o bot só responde com frases fixas.)</p>
+
+  <div id="chatbox"></div>
+  <input type="text" id="pergunta" placeholder="Ex: O que acontece se ultrapassar pela linha amarela?" />
+  <button onclick="enviar()">Enviar</button>
+
+  <script>
+    function enviar() {
+      const pergunta = document.getElementById("pergunta").value;
+      const chatbox = document.getElementById("chatbox");
+      chatbox.innerHTML += "<strong>Tu:</strong> " + pergunta + "<br>";
+
+      // Resposta fixa por agora
+      const resposta = "Ainda estou a aprender. Em breve vou ler os PDFs do regulamento.";
+      chatbox.innerHTML += "<strong>Bot:</strong> " + resposta + "<br>";
+
+      document.getElementById("pergunta").value = "";
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
